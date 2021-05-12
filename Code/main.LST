@@ -1,0 +1,170 @@
+A51 MACRO ASSEMBLER  MAIN                                                                 05/12/2021 08:55:23 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.02
+OBJECT MODULE PLACED IN main.OBJ
+ASSEMBLER INVOKED BY: C:\Keil4\C51\BIN\A51.EXE main.asm SET(SMALL) DEBUG EP
+
+LOC  OBJ            LINE     SOURCE
+
+  00B4                 1     LCD_E BIT P3.4
+  00B5                 2     LCD_RS BIT P3.5         
+                       3     
+0000                   4     ORG 0000H
+0000 8013              5     SJMP MAIN
+0003                   6     ORG 0003H                
+0003 805C              7     SJMP ISR_EX0
+0013                   8     ORG 0013H                
+0013 8062              9     SJMP ISR_EX1
+                      10     
+0015                  11     MAIN: 
+0015 75A885           12     MOV IE, #10000101B
+0018 D288             13     SETB IT0            
+001A D28A             14     SETB IT1
+001C 752000           15     MOV 20H, #0     
+                      16     
+001F 7900             17     MOV R1, #0       
+0021 1186             18     ACALL INIT_LCD
+0023 7A00             19     MOV R2, #0       
+0025 9000BF           20     MOV DPTR, #BANG
+0028 EA               21     DISPLAY:         MOV A, R2
+0029 93               22                              MOVC A, @A+DPTR 
+002A 6005             23                                      JZ XUAT
+002C 11A3             24                                      ACALL WRITETEXT
+002E 0A               25                                      INC R2
+002F 80F7             26                                      JMP DISPLAY    
+0031 B90004           27     XUAT:   CJNE R1, #0, NHAY
+0034 D2A7             28             SETB P2.7
+0036 8002             29                     JMP NHAY1
+0038 C2A7             30     NHAY:   CLR P2.7
+003A 74C6             31     NHAY1:  MOV A, #0C6H             
+003C 1198             32             ACALL WRITECOM
+003E E9               33             MOV A, R1
+003F 75F064           34             MOV B, #100
+0042 84               35                     DIV AB
+                      36     
+0043 2430             37                     ADD A, #30H
+0045 11A3             38                     ACALL WRITETEXT
+0047 74C7             39                     MOV A, #0C7H
+0049 1198             40             ACALL WRITECOM
+004B E5F0             41                     MOV A, B
+004D 75F00A           42                     MOV B, #10
+0050 84               43                     DIV AB
+0051 2430             44                     ADD A, #30H
+0053 11A3             45                     ACALL WRITETEXT
+0055 74C8             46                     MOV A, #0C8H
+0057 1198             47                     ACALL WRITECOM
+0059 E5F0             48                     MOV A, B
+005B 2430             49                     ADD A, #30H
+005D 11A3             50                     ACALL WRITETEXT
+005F 80D0             51     SJMP XUAT
+                      52             
+0061                  53     ISR_EX0:    
+0061 200104           54     JB 20H.1,TRU
+0064 D200             55     SETB 20H.0
+0066 800C             56     JMP KT0
+0068 19               57     TRU: DEC R1         
+0069 C201             58     CLR 20H.1        
+A51 MACRO ASSEMBLER  MAIN                                                                 05/12/2021 08:55:23 PAGE     2
+
+006B C200             59     CLR 20H.0
+006D 8921             60     MOV 21H, R1
+006F 300F02           61     JNB 21H.7, KT0  
+0072 7900             62     MOV R1, #0 
+0074 C289             63     KT0: CLR IE0
+0076 32               64     RETI
+                      65     
+0077                  66     ISR_EX1:           
+0077 200004           67     JB 20H.0,CONG
+007A D201             68     SETB 20H.1
+007C 8005             69     JMP KT1
+007E 09               70     CONG: INC R1        
+007F C201             71     CLR 20H.1        
+0081 C200             72     CLR 20H.0 
+0083 C28B             73     KT1: CLR IE1
+0085 32               74     RETI
+                      75     
+                      76     
+0086                  77             INIT_LCD:
+0086 7438             78                     MOV     A, #38H
+0088 1198             79                     ACALL   WRITECOM
+008A 740C             80                     MOV     A, #0CH
+008C 1198             81                     ACALL   WRITECOM
+008E 7406             82                     MOV     A, #06H
+0090 1198             83                     ACALL   WRITECOM
+0092 22               84                     RET
+0093                  85             CLEAR:
+0093 7401             86                     MOV     A, #01H
+0095 1198             87                     ACALL   WRITECOM                
+0097 22               88                     RET
+0098                  89             WRITECOM:
+0098 D2B4             90                     SETB    LCD_E
+009A C2B5             91                     CLR             LCD_RS
+009C F590             92                     MOV         P1,A
+009E C2B4             93                     CLR             LCD_E
+00A0 11AE             94                     ACALL   WAIT_LCD
+00A2 22               95                     RET
+00A3                  96             WRITETEXT:
+00A3 D2B4             97                     SETB    LCD_E
+00A5 D2B5             98                     SETB    LCD_RS
+00A7 F590             99                     MOV         P1,A
+00A9 C2B4            100                     CLR             LCD_E
+00AB 11AE            101                     ACALL   WAIT_LCD
+00AD 22              102                     RET
+                     103             
+00AE C006            104             WAIT_LCD: PUSH 6
+00B0 C007            105                       PUSH 7        
+00B2 7E0A            106                           MOV R6,#10
+00B4 7FFA            107             DL1:      MOV   R7, #250
+00B6 DFFE            108                           DJNZ      R7, $
+00B8 DEFA            109                           DJNZ      R6,DL1
+00BA D007            110                           POP 7
+00BC D006            111                           POP 6
+00BE 22              112                           RET
+00BF 534F204E        113     BANG: DB "SO NGUOI LA", 0
+00C3 47554F49                
+00C7 204C4100                
+                     114     END
+A51 MACRO ASSEMBLER  MAIN                                                                 05/12/2021 08:55:23 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+B. . . . . . . . .  D ADDR   00F0H   A   
+BANG . . . . . . .  C ADDR   00BFH   A   
+CLEAR. . . . . . .  C ADDR   0093H   A   
+CONG . . . . . . .  C ADDR   007EH   A   
+DISPLAY. . . . . .  C ADDR   0028H   A   
+DL1. . . . . . . .  C ADDR   00B4H   A   
+IE . . . . . . . .  D ADDR   00A8H   A   
+IE0. . . . . . . .  B ADDR   0088H.1 A   
+IE1. . . . . . . .  B ADDR   0088H.3 A   
+INIT_LCD . . . . .  C ADDR   0086H   A   
+ISR_EX0. . . . . .  C ADDR   0061H   A   
+ISR_EX1. . . . . .  C ADDR   0077H   A   
+IT0. . . . . . . .  B ADDR   0088H.0 A   
+IT1. . . . . . . .  B ADDR   0088H.2 A   
+KT0. . . . . . . .  C ADDR   0074H   A   
+KT1. . . . . . . .  C ADDR   0083H   A   
+LCD_E. . . . . . .  B ADDR   00B0H.4 A   
+LCD_RS . . . . . .  B ADDR   00B0H.5 A   
+MAIN . . . . . . .  C ADDR   0015H   A   
+NHAY . . . . . . .  C ADDR   0038H   A   
+NHAY1. . . . . . .  C ADDR   003AH   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P2 . . . . . . . .  D ADDR   00A0H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+TRU. . . . . . . .  C ADDR   0068H   A   
+WAIT_LCD . . . . .  C ADDR   00AEH   A   
+WRITECOM . . . . .  C ADDR   0098H   A   
+WRITETEXT. . . . .  C ADDR   00A3H   A   
+XUAT . . . . . . .  C ADDR   0031H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)
